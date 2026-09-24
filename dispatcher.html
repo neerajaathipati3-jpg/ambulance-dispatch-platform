@@ -1,0 +1,257 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Dispatcher Dashboard</title>
+
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f2f2f2;
+        margin: 0;
+      }
+
+      header {
+        background-color: #c62828;
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+
+      .container {
+        width: 95%;
+        margin: 30px auto;
+      }
+
+      h2 {
+        color: #333;
+      }
+
+      #message {
+        padding: 12px;
+        font-weight: bold;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background-color: white;
+      }
+
+      th {
+        background-color: #333;
+        color: white;
+        padding: 12px;
+      }
+
+      td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        text-align: center;
+      }
+
+      button {
+        padding: 8px 12px;
+        background-color: #1976d2;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      button:hover {
+        background-color: #0d47a1;
+      }
+
+      button:disabled {
+        background-color: #777;
+        cursor: not-allowed;
+      }
+
+      .requested {
+        color: red;
+        font-weight: bold;
+      }
+
+      .assigned {
+        color: green;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header>
+      <h1>🚑 Ambulance Dispatcher Dashboard</h1>
+
+      <p>Emergency Request Management</p>
+    </header>
+
+    <div class="container">
+      <h2>Emergency Requests</h2>
+
+      <p id="message">Loading requests...</p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Patient Name</th>
+            <th>Phone</th>
+            <th>Pickup Location</th>
+            <th>Hospital</th>
+            <th>Emergency Type</th>
+            <th>Ambulance</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+
+        <tbody id="requestTable"></tbody>
+      </table>
+    </div>
+
+    <script>
+      // ==================================================
+      // LOAD EMERGENCY REQUESTS
+      // ==================================================
+
+      async function loadRequests() {
+        try {
+          const response = await fetch(
+            "http://127.0.0.1:5000/api/emergency/requests",
+          );
+
+          const requests = await response.json();
+
+          const table = document.getElementById("requestTable");
+
+          table.innerHTML = "";
+
+          if (requests.length === 0) {
+            document.getElementById("message").innerText =
+              "No emergency requests found.";
+
+            return;
+          }
+
+          document.getElementById("message").innerText =
+            "Emergency requests loaded successfully.";
+
+          requests.forEach((request) => {
+            const row = document.createElement("tr");
+
+            let actionButton = "";
+
+            // If request is still requested
+
+            if (request.status === "REQUESTED") {
+              actionButton = `
+                    <button
+                        onclick="assignAmbulance(${request.id})">
+
+                        Assign Ambulance
+
+                    </button>
+                `;
+            } else {
+              actionButton = `
+                    <button disabled>
+                        Assigned
+                    </button>
+                `;
+            }
+
+            row.innerHTML = `
+
+                <td>
+                    ${request.id}
+                </td>
+
+                <td>
+                    ${request.patient_name}
+                </td>
+
+                <td>
+                    ${request.phone}
+                </td>
+
+                <td>
+                    ${request.pickup_location}
+                </td>
+
+                <td>
+                    ${request.hospital}
+                </td>
+
+                <td>
+                    ${request.emergency_type}
+                </td>
+
+                <td>
+                    ${request.ambulance_number || "Not Assigned"}
+                </td>
+
+                <td class="${
+                  request.status === "ASSIGNED" ? "assigned" : "requested"
+                }">
+
+                    ${request.status}
+
+                </td>
+
+                <td>
+
+                    ${actionButton}
+
+                </td>
+
+            `;
+
+            table.appendChild(row);
+          });
+        } catch (error) {
+          console.log(error);
+
+          document.getElementById("message").innerText =
+            "Cannot connect to backend server.";
+        }
+      }
+
+      // ==================================================
+      // ASSIGN AMBULANCE
+      // ==================================================
+
+      async function assignAmbulance(requestId) {
+        try {
+          const response = await fetch(
+            `http://127.0.0.1:5000/api/emergency/assign/${requestId}`,
+
+            {
+              method: "PUT",
+            },
+          );
+
+          const data = await response.json();
+
+          alert(data.message);
+
+          if (response.ok) {
+            // Reload the requests
+
+            loadRequests();
+          }
+        } catch (error) {
+          console.log(error);
+
+          alert("Cannot connect to backend server.");
+        }
+      }
+
+      // ==================================================
+      // LOAD REQUESTS WHEN PAGE OPENS
+      // ==================================================
+
+      loadRequests();
+    </script>
+  </body>
+</html>

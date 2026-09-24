@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Ambulance Login</title>
+  </head>
+
+  <body>
+    <h1>🚑 Ambulance Dispatch Login</h1>
+
+    <form id="loginForm">
+      <label>Email:</label>
+      <br />
+      <input type="email" id="email" required />
+
+      <br /><br />
+
+      <label>Password:</label>
+      <br />
+      <input type="password" id="password" required />
+
+      <br /><br />
+
+      <label>Role:</label>
+      <br />
+
+      <select id="role" required>
+        <option value="">Select Role</option>
+        <option value="patient">Patient / Hospital</option>
+        <option value="dispatcher">Dispatcher</option>
+        <option value="driver">Driver</option>
+      </select>
+
+      <br /><br />
+
+      <button type="submit">Login</button>
+    </form>
+
+    <h3 id="message"></h3>
+
+    <script>
+      const form = document.getElementById("loginForm");
+
+      form.addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        console.log("Login button clicked");
+
+        const email = document.getElementById("email").value;
+
+        const password = document.getElementById("password").value;
+
+        const role = document.getElementById("role").value;
+
+        console.log("Sending login request...");
+
+        try {
+          const response = await fetch("http://localhost:5000/api/auth/login", {
+            method: "POST",
+
+            headers: {
+              "Content-Type": "application/json",
+            },
+
+            body: JSON.stringify({
+              email: email,
+              password: password,
+            }),
+          });
+
+          const data = await response.json();
+
+          console.log("Backend response:", data);
+
+          if (!response.ok) {
+            document.getElementById("message").innerText = data.message;
+
+            return;
+          }
+
+          document.getElementById("message").innerText = "Login successful!";
+
+          localStorage.setItem("user", JSON.stringify(data.user));
+
+          if (role === "patient") {
+            window.location.href = "request.html";
+          } else if (role === "dispatcher") {
+            window.location.href = "dispatcher.html";
+          } else if (role === "driver") {
+            window.location.href = "driver.html";
+          }
+        } catch (error) {
+          console.error("Login error:", error);
+
+          document.getElementById("message").innerText =
+            "Cannot connect to backend.";
+        }
+      });
+    </script>
+  </body>
+</html>

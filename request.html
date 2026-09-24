@@ -1,0 +1,94 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Request Ambulance</title>
+  </head>
+
+  <body>
+    <h1>🚑 Request Ambulance</h1>
+
+    <form id="requestForm">
+      <label>Patient Name:</label><br />
+      <input type="text" id="patientName" required />
+      <br /><br />
+
+      <label>Phone Number:</label><br />
+      <input type="text" id="phone" required />
+      <br /><br />
+
+      <label>Pickup Location:</label><br />
+      <input type="text" id="pickupLocation" required />
+      <br /><br />
+
+      <label>Hospital:</label><br />
+      <input type="text" id="hospital" required />
+      <br /><br />
+
+      <label>Emergency Type:</label><br />
+      <select id="emergencyType" required>
+        <option value="">Select Emergency</option>
+        <option value="Accident">Accident</option>
+        <option value="Heart Problem">Heart Problem</option>
+        <option value="Breathing Problem">Breathing Problem</option>
+        <option value="Other">Other</option>
+      </select>
+
+      <br /><br />
+
+      <button type="submit">Request Ambulance</button>
+    </form>
+
+    <p id="message"></p>
+
+    <script>
+      document
+        .getElementById("requestForm")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+
+          const patientName = document.getElementById("patientName").value;
+
+          const phone = document.getElementById("phone").value;
+
+          const pickupLocation =
+            document.getElementById("pickupLocation").value;
+
+          const hospital = document.getElementById("hospital").value;
+
+          const emergencyType = document.getElementById("emergencyType").value;
+
+          try {
+            const response = await fetch(
+              "http://127.0.0.1:5000/api/emergency/request",
+              {
+                method: "POST",
+
+                headers: {
+                  "Content-Type": "application/json",
+                },
+
+                body: JSON.stringify({
+                  patientName,
+                  phone,
+                  pickupLocation,
+                  hospital,
+                  emergencyType,
+                }),
+              },
+            );
+
+            const data = await response.json();
+
+            document.getElementById("message").innerText = data.message;
+
+            if (response.ok) {
+              document.getElementById("requestForm").reset();
+            }
+          } catch (error) {
+            document.getElementById("message").innerText =
+              "Cannot connect to server.";
+          }
+        });
+    </script>
+  </body>
+</html>
